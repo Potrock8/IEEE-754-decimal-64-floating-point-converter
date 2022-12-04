@@ -1,7 +1,13 @@
 import java.math.BigInteger;
 import java.util.*;
 
+
 public class DecTo64{
+
+    public class Globals{
+        public static int exponent;
+    }
+
     static String BCDToDPBCD (String BCDVals){
         char[] output = new char[10];
         char a = BCDVals.charAt(0);
@@ -56,7 +62,7 @@ public class DecTo64{
 
     static String DecToBCD (String DecVals){
         char[] output = new char[12];
-
+        
         int j = 0;
         for (int i=0; i<3; i++){
 
@@ -177,6 +183,70 @@ public class DecTo64{
         result = exp_bin.substring(2);
         return result;
     }
+
+    static String RemoveDecPoint (String DecInput, int exp){
+       for(int i=0;i<DecInput.length();i++){
+            if(DecInput.charAt(i) == '.'){
+                int index = i;
+                StringBuilder sb = new StringBuilder(DecInput);
+                sb.deleteCharAt(i);
+                DecInput = sb.toString();   
+
+                if(i > 17 && DecInput.charAt(0) == '-'){
+                    break;
+                }
+                else if(i > 16 && DecInput.charAt(0) != '-'){
+                    break;
+                }
+                else{
+                    Globals.exponent = exp - (DecInput.length() - index);
+                }
+        }
+    }
+            return DecInput;
+    }
+    // Not a number input
+    // special cases
+
+    static String NormalizeDec (String DecInput){
+        String result;
+        String zerostring = new String();
+        
+        if(DecInput.length() < 17 && DecInput.charAt(0) == '-'){
+            for(int i=0;i< 17 - DecInput.length();i++){
+                zerostring = "0" + zerostring;
+            }
+
+            StringBuffer reString = new StringBuffer(DecInput);
+            reString.insert(1, zerostring);
+            result = reString.toString();
+        }
+        else if(DecInput.length() < 16){
+            result = String.format("%16s", DecInput).replace(' ', '0');
+        }
+        else{
+            result = DecInput;
+        }
+
+        return result;
+    }
+
+    static int NormalizeExp (String DecInput, int exp){
+        int result;
+
+        if(DecInput.length() > 16 && DecInput.charAt(0) != '-'){
+            result = exp + (DecInput.length() - 16);
+        }
+        else if(DecInput.length() > 17 && DecInput.charAt(0) == '-'){
+            result = exp + (DecInput.length() - 17);
+        }
+        else{
+            result = exp;
+        }
+
+        return result;
+    }
+
     public static void main(String[] args){
         String finalAns = new String();
         String toBCDString;
@@ -188,7 +258,14 @@ public class DecTo64{
 
         System.out.println("Enter exponent value: ");
         int exp = myInput.nextInt();
-    
+        Globals.exponent = exp;
+
+
+        dec_Inp = RemoveDecPoint(dec_Inp, exp);
+        exp = Globals.exponent;
+        dec_Inp = NormalizeDec(dec_Inp);
+        exp = NormalizeExp(dec_Inp, exp);
+        
         if (dec_Inp.charAt(0) == '-'){
             toBCDString = dec_Inp.substring(2);
         }
