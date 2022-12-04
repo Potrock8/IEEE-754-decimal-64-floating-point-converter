@@ -8,16 +8,19 @@ import java.awt.*;
 
 public class DecTo64 implements ActionListener {
     JFrame frame;
-    JPanel panel, round;
+    JPanel panel, round, binary, hexadecimal;
     JTextField textField;
+    JLabel out, bin, binOut, hex, hexOut;
     JButton[] funButtons = new JButton[5];
     JButton[] numButtons = new JButton[10];
     JButton[] roundButtons = new JButton[4];
     JButton decButton, expButton, delButton, clrButton, negButton, conButton;
     JButton rUpButton, rDownButton, truncButton, rToNButton;
+    JButton print;
 
     Font font = new Font("Arial", Font.BOLD, 30);
     Font small = new Font("Arial", Font.BOLD, 20);
+    Font smallest = new Font("Arial", Font.BOLD, 17);
 
     public DecTo64() {
         this.frame = new JFrame("IEEE-754 Decimal 64 Floating-Point Converter");
@@ -33,6 +36,11 @@ public class DecTo64 implements ActionListener {
         this.textField.setEditable(false); //edit later if needed
         this.frame.add(this.textField);
 
+        this.out = new JLabel("OUTPUT");
+        this.out.setBounds(800, 25, 300, 50);
+        this.out.setFont(this.font);
+        this.frame.add(this.out);
+
         this.panel = new JPanel();
         this.panel.setBounds(50, 100, 300, 300);
         this.panel.setLayout(new GridLayout(4, 4, 1, 1));
@@ -42,6 +50,11 @@ public class DecTo64 implements ActionListener {
         this.round.setBounds(50, 510, 300, 120);
         this.round.setLayout(new GridLayout(4, 1, 1, 1));
         this.round.setBackground(this.frame.getBackground());
+
+        /*this.binary = new JPanel();
+        this.binary.setBounds(600, 100, 600, 120);
+        this.binary.setLayout(new GridLayout(1, 2, 1, 1));
+        this.binary.setBackground(this.frame.getBackground());*/
 
         this.delButton = new JButton("DEL");
         this.clrButton = new JButton("CLR");
@@ -115,8 +128,39 @@ public class DecTo64 implements ActionListener {
         this.panel.add(this.numButtons[0]);
         this.panel.add(this.funButtons[4]);
 
+        this.bin = new JLabel("BINARY:");
+        this.bin.setBounds(400, 100, 150, 120);
+        this.bin.setFont(this.font);
+        this.frame.add(this.bin);
+
+        this.binOut = new JLabel();
+        this.binOut.setBounds(550, 100, 700, 120);
+        this.binOut.setFont(this.smallest);
+        this.frame.add(this.binOut);
+
+        this.hex = new JLabel("HEX:");
+        this.hex.setBounds(450, 300, 150, 120);
+        this.hex.setFont(this.font);
+        this.frame.add(this.hex);
+
+        this.binOut = new JLabel();
+        this.binOut.setBounds(575, 100, 700, 120);
+        this.binOut.setFont(this.smallest);
+        this.frame.add(this.binOut);
+
+        this.hexOut = new JLabel();
+        this.hexOut.setBounds(575, 300, 700, 120);
+        this.hexOut.setFont(this.smallest);
+        this.frame.add(this.hexOut);
+
+        this.print = new JButton("OUTPUT TO TEXT FILE");
+        this.print.setBounds(700, 500, 300, 100);
+        this.print.setFont(this.small);
+        this.frame.add(this.print);
+
         this.frame.add(this.panel);
         this.frame.add(this.round);
+        //this.frame.add(this.binary);
         this.frame.setVisible(true);
     }
 
@@ -222,6 +266,8 @@ public class DecTo64 implements ActionListener {
                 String hexString = new BigInteger(finalAns, 2).toString(16);
                 System.out.println(finalAns);
                 System.out.println(hexString.toUpperCase());
+                this.binOut.setText(finalAns);
+                this.hexOut.setText(hexString.toUpperCase());
             }
             /*String finalAns = new String();
             String toBCDString;
