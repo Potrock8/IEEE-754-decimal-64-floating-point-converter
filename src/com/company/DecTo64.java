@@ -4,23 +4,30 @@ import java.math.BigInteger;
 import java.util.*;
 import javax.swing.*;
 import java.awt.*;
-
+import java.io.File;
+import java.io.FileWriter;
+import java.io.BufferedWriter;
+import java.io.PrintWriter;
+import java.io.IOException;
 
 public class DecTo64 implements ActionListener {
     JFrame frame;
     JPanel panel, round, binary, hexadecimal;
     JTextField textField;
-    JLabel out, bin, binOut, hex, hexOut;
+    JLabel out, bin, binOut, hex, hexOut, signLbl, combiLbl, expCLbl, coCLbl, signOut, combiOut, expCOut, coCOut, fileLoc;
+
     JButton[] funButtons = new JButton[6];
     JButton[] numButtons = new JButton[10];
     JButton[] roundButtons = new JButton[4];
     JButton decButton, expButton, delButton, clrButton, negButton, conButton, negExpButton;
     JButton rUpButton, rDownButton, truncButton, rToNButton;
-    JButton print;
+    JButton outButton;
 
     Font font = new Font("Arial", Font.BOLD, 30);
     Font small = new Font("Arial", Font.BOLD, 20);
     Font smallest = new Font("Arial", Font.BOLD, 17);
+
+    boolean special = false;
 
     public class Globals{
         public static int exponent;
@@ -141,10 +148,53 @@ public class DecTo64 implements ActionListener {
         this.bin.setFont(this.font);
         this.frame.add(this.bin);
 
-        this.binOut = new JLabel();
-        this.binOut.setBounds(550, 100, 700, 120);
-        this.binOut.setFont(this.smallest);
-        this.frame.add(this.binOut);
+        this.signLbl = new JLabel("sign bit -");
+        this.signLbl.setBounds(535, 115, 195, 100);
+        this.signLbl.setFont(this.smallest);
+        this.signLbl.setVisible(false);
+        this.frame.add(this.signLbl);
+
+        this.signOut = new JLabel();
+        this.signOut.setBounds(735, 115, 490, 100);
+        this.signOut.setFont(this.smallest);
+        this.signOut.setVisible(false);
+        this.frame.add(this.signOut);
+
+        this.combiLbl = new JLabel("combination field -");
+        this.combiLbl.setBounds(535, 150, 195, 100);
+        this.combiLbl.setFont(this.smallest);
+        this.combiLbl.setVisible(false);
+        this.frame.add(this.combiLbl);
+
+        this.combiOut = new JLabel();
+        this.combiOut.setBounds(735, 150, 490, 100);
+        this.combiOut.setFont(this.smallest);
+        this.combiOut.setVisible(false);
+        this.frame.add(this.combiOut);
+
+        this.expCLbl = new JLabel("exponent continuation -");
+        this.expCLbl.setBounds(535, 185, 195, 100);
+        this.expCLbl.setFont(this.smallest);
+        this.expCLbl.setVisible(false);
+        this.frame.add(this.expCLbl);
+
+        this.expCOut = new JLabel();
+        this.expCOut.setBounds(735, 185, 490, 100);
+        this.expCOut.setFont(this.smallest);
+        this.expCOut.setVisible(false);
+        this.frame.add(this.expCOut);
+
+        this.coCLbl = new JLabel("coefficient continuation -");
+        this.coCLbl.setBounds(535, 220, 195, 100);
+        this.coCLbl .setFont(this.smallest);
+        this.coCLbl.setVisible(false);
+        this.frame.add(this.coCLbl);
+
+        this.coCOut = new JLabel();
+        this.coCOut.setBounds(735, 220, 490, 100);
+        this.coCOut.setFont(this.smallest);
+        this.coCOut.setVisible(false);
+        this.frame.add(this.coCOut);
 
         this.hex = new JLabel("HEX:");
         this.hex.setBounds(450, 300, 150, 120);
@@ -152,19 +202,28 @@ public class DecTo64 implements ActionListener {
         this.frame.add(this.hex);
 
         this.binOut = new JLabel();
-        this.binOut.setBounds(575, 100, 700, 120);
-        this.binOut.setFont(this.smallest);
+        this.binOut.setBounds(535, 100, 700, 120);
+        this.binOut.setFont(this.small);
+        this.binOut.setVisible(false);
         this.frame.add(this.binOut);
 
         this.hexOut = new JLabel();
-        this.hexOut.setBounds(575, 300, 700, 120);
-        this.hexOut.setFont(this.smallest);
+        this.hexOut.setBounds(535, 300, 700, 120);
+        this.hexOut.setFont(this.small);
         this.frame.add(this.hexOut);
 
-        this.print = new JButton("OUTPUT TO TEXT FILE");
-        this.print.setBounds(700, 500, 300, 100);
-        this.print.setFont(this.small);
-        this.frame.add(this.print);
+        this.fileLoc = new JLabel();
+        this.fileLoc.setBounds(535, 400, 680, 120);
+        this.fileLoc.setFont(this.smallest);
+        this.fileLoc.setVisible(false);
+        this.frame.add(this.fileLoc);
+
+        this.outButton = new JButton("OUTPUT TO TEXT FILE");
+        this.outButton.addActionListener(this);
+        this.outButton.setBounds(700, 500, 300, 100);
+        this.outButton.setFont(this.small);
+        this.outButton.setFocusable(false);
+        this.frame.add(this.outButton);
 
         this.frame.add(this.panel);
         this.frame.add(this.round);
@@ -177,7 +236,17 @@ public class DecTo64 implements ActionListener {
         //number buttons
         for(int i = 0; i < 10; i++) {
             if(e.getSource() == this.numButtons[i]) {
-                this.textField.setText(this.textField.getText().concat(String.valueOf(i)));
+                if(i == 0 && !this.textField.getText().isEmpty() && (this.textField.getText().contains("x10^") &&
+                        Character.compare(this.textField.getText().charAt(this.textField.getText().length()-2), '^') == 0 &&
+                        Character.compare(this.textField.getText().charAt(this.textField.getText().length()-1), '0') == 0))
+                    break;
+                else if(i > 0 && !this.textField.getText().isEmpty() && (this.textField.getText().contains("x10^") &&
+                        Character.compare(this.textField.getText().charAt(this.textField.getText().length()-2), '^') == 0 &&
+                        Character.compare(this.textField.getText().charAt(this.textField.getText().length()-1), '0') == 0))
+                    this.textField.setText(this.textField.getText().substring(0, this.textField.getText().length()-1) + String.valueOf(i));
+                else
+                    this.textField.setText(this.textField.getText().concat(String.valueOf(i)));
+
             }
         }
         //delete button
@@ -247,6 +316,46 @@ public class DecTo64 implements ActionListener {
                 this.textField.setText(str);
             }
         }
+        //output to text file
+        if(e.getSource() == this.outButton && !this.textField.getText().isEmpty() && !this.hexOut.getText().isEmpty()) {
+
+            try {
+                File file = new File("output.txt");
+                if(file.createNewFile()) {
+                    System.out.println("Created file at: " + file.getCanonicalPath());
+                    this.fileLoc.setText("Created file at: " + file.getCanonicalPath());
+                }
+                else {
+                    System.out.println("Updated file at: " + file.getCanonicalPath());
+                    this.fileLoc.setText("Updated file at: " + file.getCanonicalPath());
+                }
+
+                this.fileLoc.setVisible(true);
+
+                FileWriter fw = new FileWriter("output.txt", true);
+                BufferedWriter bw = new BufferedWriter(fw);
+                PrintWriter out = new PrintWriter(bw);
+
+                out.println("Input: " + this.textField.getText() + "\n");
+
+                if(this.special)
+                    out.println("Binary Output: " + this.binOut.getText());
+                else {
+                    out.println("Binary Output:" + this.binOut.getText());
+                    out.println("\t\tSign Bit:\t\t  " + this.signOut.getText());
+                    out.println("\t\tCombinational Field:\t  " + this.combiOut.getText());
+                    out.println("\t\tExponent Continuation:\t  " + this.expCOut.getText());
+                    out.println("\t\tCoefficient Continuation: " + this.coCOut.getText());
+                }
+                out.println("\nHexadecimal Equivalent: " + this.hexOut.getText() + "\n\n");
+
+                out.close();
+                bw.close();
+                fw.close();
+            } catch(IOException error) {
+                error.getStackTrace();
+            }
+        }
         //convert button
         if(e.getSource() == this.conButton && !this.textField.getText().isEmpty() && this.textField.getText().contains("x10^")) {
             String finalAns = new String();
@@ -265,8 +374,21 @@ public class DecTo64 implements ActionListener {
             dec_Inp = str.substring(0, x);
             System.out.println(dec_Inp);
 
-            if(Character.compare(last, '^') == 0)
+            this.signLbl.setVisible(false);
+            this.signOut.setVisible(false);
+            this.combiLbl.setVisible(false);
+            this.combiOut.setVisible(false);
+            this.expCLbl.setVisible(false);
+            this.expCOut.setVisible(false);
+            this.coCLbl.setVisible(false);
+            this.coCOut.setVisible(false);
+            this.binOut.setVisible(false);
+            this.fileLoc.setVisible(false);
+
+            if(Character.compare(last, '^') == 0) {
                 exp = 0;
+                this.textField.setText(this.textField.getText().concat("0"));
+            }
             else
                 exp = Integer.parseInt(str.substring(caret+1));
             Globals.exponent = exp;
@@ -288,16 +410,21 @@ public class DecTo64 implements ActionListener {
             if(exp > 369){
                 finalAns = "+INFINITY";
                 this.binOut.setText(finalAns);
+                this.binOut.setVisible(true);
                 this.hexOut.setText(finalAns);
+                this.special = true;
             }
             else if(exp < -398){
                 finalAns = "-INFINITY";
                 this.binOut.setText(finalAns);
+                this.binOut.setVisible(true);
                 this.hexOut.setText(finalAns);
+                this.special = true;
             }
             else {
                 String sign = getSignBit(dec_Inp);
                 String combi = getCombiField(dec_Inp, exp);
+                String expCont = getExpCont(exp);
 
                 if (combi.equals("INFINITY")){
                     if (sign.equals("0"))
@@ -306,17 +433,30 @@ public class DecTo64 implements ActionListener {
                         finalAns = "-INFINITY";
 
                     this.binOut.setText(finalAns);
+                    this.binOut.setVisible(true);
                     this.hexOut.setText(finalAns);
+                    this.special = true;
                 }
                 else if(combi.equals("NaN")){
                     finalAns = "NaN";
                     this.binOut.setText(finalAns);
+                    this.binOut.setVisible(true);
                     this.hexOut.setText(finalAns);
+                    this.special = true;
                 }
                 else{
                     finalAns = finalAns + sign;
                     finalAns = finalAns + combi;
-                    finalAns = finalAns + getExpCont(exp);
+                    finalAns = finalAns + expCont;
+
+                    this.signLbl.setVisible(true);
+                    this.signOut.setVisible(true);
+                    this.combiLbl.setVisible(true);
+                    this.combiOut.setVisible(true);
+                    this.expCLbl.setVisible(true);
+                    this.expCOut.setVisible(true);
+                    this.coCLbl.setVisible(true);
+                    this.coCOut.setVisible(true);
 
                     BCDList = toBCDString.split("(?<=\\G.{" + 3 + "})");
                     System.out.println(BCDList[0]);
@@ -328,10 +468,25 @@ public class DecTo64 implements ActionListener {
                     }
 
                     String hexString = new BigInteger(finalAns, 2).toString(16);
+                    hexString = hexString.toUpperCase();
+                    hexString = hexString.substring(0, 4) + " " + hexString.substring(4, 8) + " " +
+                                hexString.substring(8, 12) + " " + hexString.substring(12);
+
+                    combi = combi.substring(0, 2) + " " + combi.substring(2);
+                    expCont = expCont.substring(0, 4) + " " + expCont.substring(4);
+                    String coefCont = finalAns.substring(14, 24) + " " + finalAns.substring(24, 34) + " " +
+                                    finalAns.substring(34, 44) + " " + finalAns.substring(44, 54) + " " +
+                                    finalAns.substring(54);
+
                     System.out.println(finalAns);
                     System.out.println(hexString.toUpperCase());
-                    this.binOut.setText(finalAns);
-                    this.hexOut.setText(hexString.toUpperCase());
+                    this.signOut.setText(sign);
+                    this.combiOut.setText(combi);
+                    this.expCOut.setText(expCont);
+                    this.coCOut.setText(coefCont);
+                    //this.binOut.setText(finalAns);
+                    this.hexOut.setText(hexString);
+                    this.special = false;
                 }
             }
             /*String finalAns = new String();
