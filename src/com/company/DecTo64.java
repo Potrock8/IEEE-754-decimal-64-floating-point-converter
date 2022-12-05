@@ -244,30 +244,56 @@ public class DecTo64 implements ActionListener {
             else
                 exp = Integer.parseInt(str.substring(caret+1));
             System.out.println(exp);
-
-            if(exp > 369 || exp < -398){
-                finalAns = "Invalid Exponent";
-                System.out.println(finalAns);
+            
+            if(exp > 369){
+                finalAns = finalAns + "+INFINITY";
+                this.binOut.setText(finalAns);
+            }
+            else if(exp < -398){
+                finalAns = finalAns + "-INFINITY";
+                this.binOut.setText(finalAns);
             }
             else {
-                finalAns = finalAns + getSignBit(dec_Inp) ;
-                finalAns = finalAns + getCombiField(dec_Inp, exp);
-                finalAns = finalAns + getExpCont(exp);
+                String sign = getSignBit(dec_Inp);
+                String combi = getCombiField(dec_Inp, exp);
 
-                BCDList = toBCDString.split("(?<=\\G.{" + 3 + "})");
-                System.out.println(BCDList[0]);
-                for (int i = 0; i < 5; i++) {
-                    String bcd = DecToBCD(BCDList[i]);
-                    String dpbcd = BCDToDPBCD(bcd);
-
-                    finalAns = finalAns + dpbcd;
+                if (combi.equals("INFINITY")){
+                    if (sign == "0"){
+                        finalAns = finalAns + "+INFINITY";
+                        this.binOut.setText(finalAns);
+                        this.hexOut.setText(finalAns);
+                    }
+                    else{
+                        finalAns = finalAns + "-INFINITY";
+                        this.binOut.setText(finalAns);
+                        this.hexOut.setText(finalAns);
+                    }
                 }
+                else if(combi.equals("NaN")){
+                    finalAns = finalAns + "NaN";
+                    this.binOut.setText(finalAns);
+                        this.hexOut.setText(finalAns);
+                }
+                else{
+                    finalAns = finalAns + sign;
+                    finalAns = finalAns + combi;
+                    finalAns = finalAns + getExpCont(exp);
 
-                String hexString = new BigInteger(finalAns, 2).toString(16);
-                System.out.println(finalAns);
-                System.out.println(hexString.toUpperCase());
-                this.binOut.setText(finalAns);
-                this.hexOut.setText(hexString.toUpperCase());
+                    BCDList = toBCDString.split("(?<=\\G.{" + 3 + "})");
+                    System.out.println(BCDList[0]);
+                    for (int i = 0; i < 5; i++) {
+                        String bcd = DecToBCD(BCDList[i]);
+                        String dpbcd = BCDToDPBCD(bcd);
+
+                        finalAns = finalAns + dpbcd;
+                    }
+
+                    String hexString = new BigInteger(finalAns, 2).toString(16);
+                    System.out.println(finalAns);
+                    System.out.println(hexString.toUpperCase());
+                    this.binOut.setText(finalAns);
+                    this.hexOut.setText(hexString.toUpperCase());
+                }
             }
             /*String finalAns = new String();
             String toBCDString;
@@ -433,6 +459,10 @@ public class DecTo64 implements ActionListener {
         String exp_bin = Integer.toBinaryString(exp);
         char[] combiField = new char[5];
 
+        if (exp_bin.length() > 10){
+            exp_bin = "111111111111";
+        }
+
         if (exp_bin.length() != 10){
             while(exp_bin.length() != 10){
                 exp_bin = '0' + exp_bin;
@@ -470,6 +500,13 @@ public class DecTo64 implements ActionListener {
         }
 
         String result = String.copyValueOf(combiField);
+
+        if (result.equals("11110")){
+                result = "INFINITY";
+        } 
+        else if (result.equals("11111")){
+            result = "NaN";
+        }
         return result;
     }
 
