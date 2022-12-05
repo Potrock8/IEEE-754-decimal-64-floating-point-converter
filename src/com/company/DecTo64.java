@@ -11,16 +11,21 @@ public class DecTo64 implements ActionListener {
     JPanel panel, round, binary, hexadecimal;
     JTextField textField;
     JLabel out, bin, binOut, hex, hexOut;
-    JButton[] funButtons = new JButton[5];
+    JButton[] funButtons = new JButton[6];
     JButton[] numButtons = new JButton[10];
     JButton[] roundButtons = new JButton[4];
-    JButton decButton, expButton, delButton, clrButton, negButton, conButton;
+    JButton decButton, expButton, delButton, clrButton, negButton, conButton, negExpButton;
     JButton rUpButton, rDownButton, truncButton, rToNButton;
     JButton print;
 
     Font font = new Font("Arial", Font.BOLD, 30);
     Font small = new Font("Arial", Font.BOLD, 20);
     Font smallest = new Font("Arial", Font.BOLD, 17);
+
+    public class Globals{
+        public static int exponent;
+        public static boolean decimalpoint;
+    }
 
     public DecTo64() {
         this.frame = new JFrame("IEEE-754 Decimal 64 Floating-Point Converter");
@@ -61,12 +66,14 @@ public class DecTo64 implements ActionListener {
         this.negButton = new JButton("+/-");
         this.decButton = new JButton(".");
         this.expButton = new JButton("x10");
+        this.negExpButton = new JButton("-exp");
 
         this.funButtons[0] = this.delButton;
         this.funButtons[1] = this.clrButton;
         this.funButtons[2] = this.negButton;
         this.funButtons[3] = this.decButton;
         this.funButtons[4] = this.expButton;
+        this.funButtons[5] = this.negExpButton;
 
         this.rUpButton = new JButton("ROUND UP");
         this.rDownButton = new JButton("ROUND DOWN");
@@ -78,9 +85,9 @@ public class DecTo64 implements ActionListener {
         this.roundButtons[2] = this.truncButton;
         this.roundButtons[3] = this.rToNButton;
 
-        for(int i = 0; i < 5; i++) {
+        for(int i = 0; i < 6; i++) {
             this.funButtons[i].addActionListener(this);
-            this.funButtons[i].setFont(this.small);
+            this.funButtons[i].setFont(this.smallest);
             this.funButtons[i].setFocusable(false);
             if(i == 0 || i == 1) {
                 this.funButtons[i].setBackground(Color.red);
@@ -127,6 +134,7 @@ public class DecTo64 implements ActionListener {
         this.panel.add(this.funButtons[3]);
         this.panel.add(this.numButtons[0]);
         this.panel.add(this.funButtons[4]);
+        this.panel.add(this.funButtons[5]);
 
         this.bin = new JLabel("BINARY:");
         this.bin.setBounds(400, 100, 150, 120);
@@ -197,7 +205,7 @@ public class DecTo64 implements ActionListener {
                 this.textField.setText("-".concat(str));
         }
         //decimal point button
-        if(e.getSource() == this.decButton && this.textField.getText().indexOf('.') == -1) {
+        if(e.getSource() == this.decButton && this.textField.getText().indexOf('.') == -1 && !this.textField.getText().contains("x10^")) {
             if(this.textField.getText().equals(""))
                 this.textField.setText("0.");
             else
@@ -215,7 +223,31 @@ public class DecTo64 implements ActionListener {
             else*/
                 this.textField.setText(this.textField.getText().concat("x10^"));
         }
+        //negative exponent button
+        if(e.getSource() == this.negExpButton && !this.textField.getText().isEmpty() && this.textField.getText().contains("x10^")) {
+            String str = this.textField.getText();
+            String subString1, subString2;
+            char last = str.charAt(str.length()-1);
+            char first;
+            int exp = 0;
 
+            if(Character.compare(last, '^') != 0) {
+                exp = str.indexOf('^') + 1;
+                subString1 = str.substring(0, exp);
+                subString2 = str.substring(exp);
+
+                first = subString2.charAt(0);
+
+                str = subString1;
+                if(Character.compare(first, '-') == 0)
+                    str = str + subString2.substring(1);
+                else
+                    str = str + "-" + subString2;
+
+                this.textField.setText(str);
+            }
+        }
+        //convert button
         if(e.getSource() == this.conButton && !this.textField.getText().isEmpty() && this.textField.getText().contains("x10^")) {
             String finalAns = new String();
             String toBCDString;
@@ -232,6 +264,20 @@ public class DecTo64 implements ActionListener {
 
             dec_Inp = str.substring(0, x);
             System.out.println(dec_Inp);
+
+            if(Character.compare(last, '^') == 0)
+                exp = 0;
+            else
+                exp = Integer.parseInt(str.substring(caret+1));
+            Globals.exponent = exp;
+            System.out.println(exp);
+
+            dec_Inp = RemoveDecPoint(dec_Inp, exp);
+            exp = Globals.exponent;
+            dec_Inp = NormalizeDec(dec_Inp);
+            exp = NormalizeExp(dec_Inp, exp);
+            System.out.println(dec_Inp);
+
             if (dec_Inp.charAt(0) == '-'){
                 toBCDString = dec_Inp.substring(2);
             }
@@ -239,40 +285,33 @@ public class DecTo64 implements ActionListener {
                 toBCDString = dec_Inp.substring(1);
             }
 
-            if(Character.compare(last, '^') == 0)
-                exp = 0;
-            else
-                exp = Integer.parseInt(str.substring(caret+1));
-            System.out.println(exp);
-            
             if(exp > 369){
-                finalAns = finalAns + "+INFINITY";
+                finalAns = "+INFINITY";
                 this.binOut.setText(finalAns);
+                this.hexOut.setText(finalAns);
             }
             else if(exp < -398){
-                finalAns = finalAns + "-INFINITY";
+                finalAns = "-INFINITY";
                 this.binOut.setText(finalAns);
+                this.hexOut.setText(finalAns);
             }
             else {
                 String sign = getSignBit(dec_Inp);
                 String combi = getCombiField(dec_Inp, exp);
 
                 if (combi.equals("INFINITY")){
-                    if (sign == "0"){
-                        finalAns = finalAns + "+INFINITY";
-                        this.binOut.setText(finalAns);
-                        this.hexOut.setText(finalAns);
-                    }
-                    else{
-                        finalAns = finalAns + "-INFINITY";
-                        this.binOut.setText(finalAns);
-                        this.hexOut.setText(finalAns);
-                    }
+                    if (sign.equals("0"))
+                        finalAns = "+INFINITY";
+                    else
+                        finalAns = "-INFINITY";
+
+                    this.binOut.setText(finalAns);
+                    this.hexOut.setText(finalAns);
                 }
                 else if(combi.equals("NaN")){
-                    finalAns = finalAns + "NaN";
+                    finalAns = "NaN";
                     this.binOut.setText(finalAns);
-                        this.hexOut.setText(finalAns);
+                    this.hexOut.setText(finalAns);
                 }
                 else{
                     finalAns = finalAns + sign;
@@ -502,11 +541,12 @@ public class DecTo64 implements ActionListener {
         String result = String.copyValueOf(combiField);
 
         if (result.equals("11110")){
-                result = "INFINITY";
-        } 
+            result = "INFINITY";
+        }
         else if (result.equals("11111")){
             result = "NaN";
         }
+
         return result;
     }
 
@@ -522,6 +562,74 @@ public class DecTo64 implements ActionListener {
         }
 
         result = exp_bin.substring(2);
+        return result;
+    }
+
+    static String RemoveDecPoint (String DecInput, int exp){
+        for(int i=0;i<DecInput.length();i++){
+            if(DecInput.charAt(i) == '.'){
+                Globals.decimalpoint = true ;
+                int index = i;
+                StringBuilder sb = new StringBuilder(DecInput);
+                sb.deleteCharAt(i);
+                DecInput = sb.toString();
+
+                if(i > 17 && DecInput.charAt(0) == '-'){
+                    break;
+                }
+                else if(i > 16 && DecInput.charAt(0) != '-'){
+                    break;
+                }
+                else{
+                    Globals.exponent = exp - (DecInput.length() - index);
+                }
+            }
+        }
+        return DecInput;
+    }
+    // Not a number input
+    // special cases
+
+    static String NormalizeDec (String DecInput){
+        String result;
+        String zerostring = new String();
+
+        if(DecInput.length() < 17 && DecInput.charAt(0) == '-'){
+            for(int i=0;i< 17 - DecInput.length();i++){
+                zerostring = "0" + zerostring;
+            }
+
+            StringBuffer reString = new StringBuffer(DecInput);
+            reString.insert(1, zerostring);
+            result = reString.toString();
+        }
+        else if(DecInput.length() < 16){
+            result = String.format("%16s", DecInput).replace(' ', '0');
+        }
+        else{
+            result = DecInput;
+        }
+
+        return result;
+    }
+
+    static int NormalizeExp (String DecInput, int exp){
+        int result;
+
+        if(Globals.decimalpoint != true){
+            if(DecInput.length() > 16 && DecInput.charAt(0) != '-'){
+                result = exp + (DecInput.length() - 16);
+            }
+            else if(DecInput.length() > 17 && DecInput.charAt(0) == '-'){
+                result = exp + (DecInput.length() - 17);
+            }
+            else{
+                result = exp;
+            }
+        }
+        else{
+            result = exp;
+        }
         return result;
     }
 
