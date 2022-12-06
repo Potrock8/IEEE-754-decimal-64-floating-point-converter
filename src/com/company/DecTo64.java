@@ -288,10 +288,10 @@ public class DecTo64 implements ActionListener {
             char last = str.charAt(str.length()-1);
 
             /*if(this.textField.getText().indexOf('.') == -1)
-                this.textField.setText(this.textField.getText().concat(".0x10^"));
-            else if(Character.compare(last, '.') == 0)
+                this.textField.setText(this.textField.getText().concat(".0x10^"));*/
+            if(Character.compare(last, '.') == 0)
                 this.textField.setText(this.textField.getText().concat("0x10^"));
-            else*/
+            else
                 this.textField.setText(this.textField.getText().concat("x10^"));
         }
         //negative exponent button
