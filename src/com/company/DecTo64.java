@@ -2,6 +2,8 @@ package com.company;
 import java.awt.event.*;
 import java.math.BigInteger;
 import java.util.*;
+
+import javax.sound.midi.SysexMessage;
 import javax.swing.*;
 import java.awt.*;
 import java.io.File;
@@ -407,24 +409,27 @@ public class DecTo64 implements ActionListener {
                 toBCDString = dec_Inp.substring(1);
             }
 
-            if(exp > 369){
-                finalAns = "+INFINITY";
-                this.binOut.setText(finalAns);
-                this.binOut.setVisible(true);
-                this.hexOut.setText(finalAns);
-                this.special = true;
-            }
-            else if(exp < -398){
-                finalAns = "-INFINITY";
-                this.binOut.setText(finalAns);
-                this.binOut.setVisible(true);
-                this.hexOut.setText(finalAns);
-                this.special = true;
-            }
-            else {
+            // if(exp > 369){
+            //     finalAns = "+INFINITY";
+            //     this.binOut.setText(finalAns);
+            //     this.binOut.setVisible(true);
+            //     this.hexOut.setText(finalAns);
+            //     this.special = true;
+            // }
+            // else if(exp < -398){
+            //     finalAns = "-INFINITY";
+            //     this.binOut.setText(finalAns);
+            //     this.binOut.setVisible(true);
+            //     this.hexOut.setText(finalAns);
+            //     this.special = true;
+            // }
+            // else {
+                System.out.println("test3");
                 String sign = getSignBit(dec_Inp);
                 String combi = getCombiField(dec_Inp, exp);
+                System.out.println("test11");
                 String expCont = getExpCont(exp);
+                System.out.println("test4");
 
                 if (combi.equals("INFINITY")){
                     if (sign.equals("0"))
@@ -432,6 +437,7 @@ public class DecTo64 implements ActionListener {
                     else
                         finalAns = "-INFINITY";
 
+                        System.out.println("test12");
                     this.binOut.setText(finalAns);
                     this.binOut.setVisible(true);
                     this.hexOut.setText(finalAns);
@@ -445,6 +451,7 @@ public class DecTo64 implements ActionListener {
                     this.special = true;
                 }
                 else{
+                    System.out.println("test5");
                     finalAns = finalAns + sign;
                     finalAns = finalAns + combi;
                     finalAns = finalAns + expCont;
@@ -458,16 +465,26 @@ public class DecTo64 implements ActionListener {
                     this.coCLbl.setVisible(true);
                     this.coCOut.setVisible(true);
 
+
+                    System.out.println("tobcdstring = " + toBCDString);
                     BCDList = toBCDString.split("(?<=\\G.{" + 3 + "})");
-                    System.out.println(BCDList[0]);
+                    //System.out.println(BCDList[0]);
                     for (int i = 0; i < 5; i++) {
                         String bcd = DecToBCD(BCDList[i]);
+                        System.out.println(BCDList[i]);
                         String dpbcd = BCDToDPBCD(bcd);
 
                         finalAns = finalAns + dpbcd;
                     }
 
                     String hexString = new BigInteger(finalAns, 2).toString(16);
+
+                    if (hexString.length() != 16){
+                        while (hexString.length() != 16){
+                            hexString = "0" + hexString;
+                        }
+                    }
+
                     hexString = hexString.toUpperCase();
                     hexString = hexString.substring(0, 4) + " " + hexString.substring(4, 8) + " " +
                                 hexString.substring(8, 12) + " " + hexString.substring(12);
@@ -487,7 +504,7 @@ public class DecTo64 implements ActionListener {
                     //this.binOut.setText(finalAns);
                     this.hexOut.setText(hexString);
                     this.special = false;
-                }
+                // }
             }
             /*String finalAns = new String();
             String toBCDString;
@@ -644,25 +661,32 @@ public class DecTo64 implements ActionListener {
             signBit = "0";
         }
 
+        System.out.println("test6");
         return signBit;
     }
 
     static String getCombiField (String DecInput, int exp){
         char msd;
+        System.out.println(exp);
         exp += 398;
         String exp_bin = Integer.toBinaryString(exp);
         char[] combiField = new char[5];
 
+        System.out.println("exp_bin = " + exp_bin);
+        System.out.println("exp = " + exp);
+
         if (exp_bin.length() > 10){
-            exp_bin = "111111111111";
+            exp_bin = "1111111111";
         }
 
+        System.out.println("test9");
         if (exp_bin.length() != 10){
             while(exp_bin.length() != 10){
                 exp_bin = '0' + exp_bin;
             }
         }
-
+        System.out.println("mod = " + exp_bin);
+        System.out.println("test10");
         if (DecInput.charAt(0) == '-'){
             msd = DecInput.charAt(1);
         }
@@ -677,7 +701,7 @@ public class DecTo64 implements ActionListener {
                 msd_bin = '0' + msd_bin;
             }
         }
-
+        System.out.println("test8");
         if (Character.getNumericValue(msd) < 8){
             combiField[0] = exp_bin.charAt(0);
             combiField[1] = exp_bin.charAt(1);
@@ -694,7 +718,11 @@ public class DecTo64 implements ActionListener {
         }
 
         String result = String.copyValueOf(combiField);
-
+        System.out.println("test1");
+        if (exp_bin.length() > 10 || exp < 0 || exp > 767){
+            result = "11110";
+        }
+        System.out.println("test2");
         if (result.equals("11110")){
             result = "INFINITY";
         }
@@ -702,6 +730,7 @@ public class DecTo64 implements ActionListener {
             result = "NaN";
         }
 
+        System.out.println(result);
         return result;
     }
 
@@ -710,12 +739,17 @@ public class DecTo64 implements ActionListener {
         String exp_bin = Integer.toBinaryString(exp);
         String result;
 
+        if (exp_bin.length() > 10){
+            exp_bin = "1111111111";
+        }
+
         if (exp_bin.length() != 10){
             while(exp_bin.length() != 10){
                 exp_bin = '0' + exp_bin;
             }
         }
 
+        System.out.println("test7");
         result = exp_bin.substring(2);
         return result;
     }
