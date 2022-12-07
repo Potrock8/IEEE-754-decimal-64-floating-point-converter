@@ -2,8 +2,6 @@ package com.company;
 import java.awt.event.*;
 import java.math.BigInteger;
 import java.util.*;
-
-import javax.sound.midi.SysexMessage;
 import javax.swing.*;
 import java.awt.*;
 import java.io.File;
@@ -14,9 +12,9 @@ import java.io.IOException;
 
 public class DecTo64 implements ActionListener {
     JFrame frame;
-    JPanel panel, round, binary, hexadecimal;
+    JPanel panel, round;
     JTextField textField;
-    JLabel out, bin, binOut, hex, hexOut, signLbl, combiLbl, expCLbl, coCLbl, signOut, combiOut, expCOut, coCOut, fileLoc;
+    JLabel out, bin, binOut, hex, hexOut, signLbl, combiLbl, expCLbl, coCLbl, signOut, combiOut, expCOut, coCOut, fileLoc, group, mem1, mem2, mem3, mem4;
 
     JButton[] funButtons = new JButton[6];
     JButton[] numButtons = new JButton[10];
@@ -223,9 +221,33 @@ public class DecTo64 implements ActionListener {
         this.outButton.setFocusable(false);
         this.frame.add(this.outButton);
 
+        this.group = new JLabel("S11 Group 8");
+        this.group.setBounds(1050, 450, 150, 120);
+        this.group.setFont(this.small);
+        this.frame.add(this.group);
+
+        this.mem1 = new JLabel("Herrera, Arquiel");
+        this.mem1.setBounds(1050, 475, 150, 120);
+        this.mem1.setFont(this.small);
+        this.frame.add(this.mem1);
+
+        this.mem2 = new JLabel("Muros, Don");
+        this.mem2.setBounds(1050, 500, 150, 120);
+        this.mem2.setFont(this.small);
+        this.frame.add(this.mem2);
+
+        this.mem3 = new JLabel("Sibal, Marc");
+        this.mem3.setBounds(1050, 525, 150, 120);
+        this.mem3.setFont(this.small);
+        this.frame.add(this.mem3);
+
+        this.mem4 = new JLabel("Tan, Patrick");
+        this.mem4.setBounds(1050, 550, 150, 120);
+        this.mem4.setFont(this.small);
+        this.frame.add(this.mem4);
+
         this.frame.add(this.panel);
         this.frame.add(this.round);
-        //this.frame.add(this.binary);
         this.frame.setVisible(true);
     }
 
@@ -271,15 +293,6 @@ public class DecTo64 implements ActionListener {
                     else
                         this.textField.setText(this.textField.getText().concat(String.valueOf(i)));
                 }
-                /*if(i == 0 && !this.textField.getText().isEmpty() && (this.textField.getText().contains("x10^") &&
-                        (Character.compare(this.textField.getText().charAt(this.textField.getText().length()-2), '^') == 0 &&
-                        Character.compare(this.textField.getText().charAt(this.textField.getText().length()-1), '0') == 0)))
-                    break;
-                else if(i > 0 && !this.textField.getText().isEmpty() && (this.textField.getText().contains("x10^") &&
-                        Character.compare(this.textField.getText().charAt(this.textField.getText().length()-2), '^') == 0 &&
-                        Character.compare(this.textField.getText().charAt(this.textField.getText().length()-1), '0') == 0))
-                    this.textField.setText(this.textField.getText().substring(0, this.textField.getText().length()-1) + String.valueOf(i));*/
-
                 else
                     this.textField.setText(this.textField.getText().concat(String.valueOf(i)));
 
@@ -321,8 +334,6 @@ public class DecTo64 implements ActionListener {
             String str = this.textField.getText();
             char last = str.charAt(str.length()-1);
 
-            /*if(this.textField.getText().indexOf('.') == -1)
-                this.textField.setText(this.textField.getText().concat(".0x10^"));*/
             if(str.contains(".")) {
                 int index = str.indexOf(".");
 
@@ -348,8 +359,6 @@ public class DecTo64 implements ActionListener {
                 else
                     this.textField.setText(this.textField.getText().concat("x10^"));
             }
-            /*else if(Character.compare(last, '.') == 0)
-                this.textField.setText(this.textField.getText().concat("0x10^"));*/
             else
                 this.textField.setText(this.textField.getText().concat("x10^"));
         }
@@ -421,53 +430,109 @@ public class DecTo64 implements ActionListener {
         if(e.getSource() == this.rUpButton && !this.textField.getText().isEmpty() && this.textField.getText().contains("x10^")) {
             String str = this.textField.getText();
             int x = str.indexOf("x");
-            String subString1, subString2;
+            int caret = str.indexOf("^");
+            String subString1, subString2, subString3;
+            int exp = 0;
 
             subString1 = str.substring(0, x);
-            subString2 = str.substring(x);
+            subString2 = str.substring(x, caret+1);
+            subString3 = str.substring(caret+1);
+
+            exp = Integer.parseInt(subString3);
+            Globals.exponent = exp;
+
+            subString1 = RemoveDecPoint(subString1, exp);
+            exp = Globals.exponent;
+            subString1 = NormalizeDec(subString1);
+            exp = NormalizeExp(subString1, exp);
+            subString3 = String.valueOf(exp);
 
             subString1 = RoundUp(subString1);
 
-            this.textField.setText(subString1 + subString2);
+            Globals.padded = false;
+
+            this.textField.setText(subString1 + subString2 + subString3);
         }
         //round down
         if(e.getSource() == this.rDownButton && !this.textField.getText().isEmpty() && this.textField.getText().contains("x10^")) {
             String str = this.textField.getText();
             int x = str.indexOf("x");
-            String subString1, subString2;
+            int caret = str.indexOf("^");
+            String subString1, subString2, subString3;
+            int exp = 0;
 
             subString1 = str.substring(0, x);
-            subString2 = str.substring(x);
+            subString2 = str.substring(x, caret+1);
+            subString3 = str.substring(caret+1);
+
+            exp = Integer.parseInt(subString3);
+            Globals.exponent = exp;
+
+            subString1 = RemoveDecPoint(subString1, exp);
+            exp = Globals.exponent;
+            subString1 = NormalizeDec(subString1);
+            exp = NormalizeExp(subString1, exp);
+            subString3 = String.valueOf(exp);
 
             subString1 = RoundDown(subString1);
 
-            this.textField.setText(subString1 + subString2);
+            Globals.padded = false;
+
+            this.textField.setText(subString1 + subString2 + subString3);
         }
         //truncate button
         if(e.getSource() == this.truncButton && !this.textField.getText().isEmpty() && this.textField.getText().contains("x10^")) {
             String str = this.textField.getText();
             int x = str.indexOf("x");
-            String subString1, subString2;
+            int caret = str.indexOf("^");
+            String subString1, subString2, subString3;
+            int exp = 0;
 
             subString1 = str.substring(0, x);
-            subString2 = str.substring(x);
+            subString2 = str.substring(x, caret+1);
+            subString3 = str.substring(caret+1);
+
+            exp = Integer.parseInt(subString3);
+            Globals.exponent = exp;
+
+            subString1 = RemoveDecPoint(subString1, exp);
+            exp = Globals.exponent;
+            subString1 = NormalizeDec(subString1);
+            exp = NormalizeExp(subString1, exp);
+            subString3 = String.valueOf(exp);
 
             subString1 = Truncate(subString1);
 
-            this.textField.setText(subString1 + subString2);
+            Globals.padded = false;
+
+            this.textField.setText(subString1 + subString2 + subString3);
         }
         //round to nearest
         if(e.getSource() == this.rToNButton && !this.textField.getText().isEmpty() && this.textField.getText().contains("x10^")) {
             String str = this.textField.getText();
             int x = str.indexOf("x");
-            String subString1, subString2;
+            int caret = str.indexOf("^");
+            String subString1, subString2, subString3;
+            int exp = 0;
 
             subString1 = str.substring(0, x);
-            subString2 = str.substring(x);
+            subString2 = str.substring(x, caret+1);
+            subString3 = str.substring(caret+1);
+
+            exp = Integer.parseInt(subString3);
+            Globals.exponent = exp;
+
+            subString1 = RemoveDecPoint(subString1, exp);
+            exp = Globals.exponent;
+            subString1 = NormalizeDec(subString1);
+            exp = NormalizeExp(subString1, exp);
+            subString3 = String.valueOf(exp);
 
             subString1 = RoundNearest(subString1);
 
-            this.textField.setText(subString1 + subString2);
+            Globals.padded = false;
+
+            this.textField.setText(subString1 + subString2 + subString3);
         }
         //convert button
         if(e.getSource() == this.conButton && !this.textField.getText().isEmpty() && this.textField.getText().contains("x10^")) {
@@ -520,143 +585,85 @@ public class DecTo64 implements ActionListener {
                 toBCDString = dec_Inp.substring(1);
             }
 
-            // if(exp > 369){
-            //     finalAns = "+INFINITY";
-            //     this.binOut.setText(finalAns);
-            //     this.binOut.setVisible(true);
-            //     this.hexOut.setText(finalAns);
-            //     this.special = true;
-            // }
-            // else if(exp < -398){
-            //     finalAns = "-INFINITY";
-            //     this.binOut.setText(finalAns);
-            //     this.binOut.setVisible(true);
-            //     this.hexOut.setText(finalAns);
-            //     this.special = true;
-            // }
-            // else {
-                System.out.println("test3");
-                String sign = getSignBit(dec_Inp);
-                String combi = getCombiField(dec_Inp, exp);
-                System.out.println("test11");
-                String expCont = getExpCont(exp);
-                System.out.println("test4");
+            System.out.println("test3");
+            String sign = getSignBit(dec_Inp);
+            String combi = getCombiField(dec_Inp, exp);
+            System.out.println("test11");
+            String expCont = getExpCont(exp);
+            System.out.println("test4");
 
-                if (combi.equals("INFINITY")){
-                    if (sign.equals("0"))
-                        finalAns = "+INFINITY";
-                    else
-                        finalAns = "-INFINITY";
+            if (combi.equals("INFINITY")){
+                if (sign.equals("0"))
+                    finalAns = "+INFINITY";
+                else
+                    finalAns = "-INFINITY";
 
-                        System.out.println("test12");
-                    this.binOut.setText(finalAns);
-                    this.binOut.setVisible(true);
-                    this.hexOut.setText(finalAns);
-                    this.special = true;
-                }
-                else if(combi.equals("NaN")){
-                    finalAns = "NaN";
-                    this.binOut.setText(finalAns);
-                    this.binOut.setVisible(true);
-                    this.hexOut.setText(finalAns);
-                    this.special = true;
-                }
-                else{
-                    System.out.println("test5");
-                    finalAns = finalAns + sign;
-                    finalAns = finalAns + combi;
-                    finalAns = finalAns + expCont;
-
-                    this.signLbl.setVisible(true);
-                    this.signOut.setVisible(true);
-                    this.combiLbl.setVisible(true);
-                    this.combiOut.setVisible(true);
-                    this.expCLbl.setVisible(true);
-                    this.expCOut.setVisible(true);
-                    this.coCLbl.setVisible(true);
-                    this.coCOut.setVisible(true);
-
-
-                    System.out.println("tobcdstring = " + toBCDString);
-                    BCDList = toBCDString.split("(?<=\\G.{" + 3 + "})");
-                    //System.out.println(BCDList[0]);
-                    for (int i = 0; i < 5; i++) {
-                        String bcd = DecToBCD(BCDList[i]);
-                        System.out.println(BCDList[i]);
-                        String dpbcd = BCDToDPBCD(bcd);
-
-                        finalAns = finalAns + dpbcd;
-                    }
-
-                    String hexString = new BigInteger(finalAns, 2).toString(16);
-
-                    if (hexString.length() != 16){
-                        while (hexString.length() != 16){
-                            hexString = "0" + hexString;
-                        }
-                    }
-
-                    hexString = hexString.toUpperCase();
-                    hexString = hexString.substring(0, 4) + " " + hexString.substring(4, 8) + " " +
-                                hexString.substring(8, 12) + " " + hexString.substring(12);
-
-                    combi = combi.substring(0, 2) + " " + combi.substring(2);
-                    expCont = expCont.substring(0, 4) + " " + expCont.substring(4);
-                    String coefCont = finalAns.substring(14, 24) + " " + finalAns.substring(24, 34) + " " +
-                                    finalAns.substring(34, 44) + " " + finalAns.substring(44, 54) + " " +
-                                    finalAns.substring(54);
-
-                    System.out.println(finalAns);
-                    System.out.println(hexString.toUpperCase());
-                    this.signOut.setText(sign);
-                    this.combiOut.setText(combi);
-                    this.expCOut.setText(expCont);
-                    this.coCOut.setText(coefCont);
-                    //this.binOut.setText(finalAns);
-                    this.hexOut.setText(hexString);
-                    this.special = false;
-                // }
+                    System.out.println("test12");
+                this.binOut.setText(finalAns);
+                this.binOut.setVisible(true);
+                this.hexOut.setText(finalAns);
+                this.special = true;
             }
-            /*String finalAns = new String();
-            String toBCDString;
-            String[] BCDList;
-            Scanner myInput = new Scanner(System.in);
-
-            System.out.println("Enter 16 digit decimal: ");
-            String dec_Inp = myInput.nextLine();
-
-            System.out.println("Enter exponent value: ");
-            int exp = myInput.nextInt();
-
-            if (dec_Inp.charAt(0) == '-'){
-                toBCDString = dec_Inp.substring(2);
+            else if(combi.equals("NaN")){
+                finalAns = "NaN";
+                this.binOut.setText(finalAns);
+                this.binOut.setVisible(true);
+                this.hexOut.setText(finalAns);
+                this.special = true;
             }
             else{
-                toBCDString = dec_Inp.substring(1);
-            }
+                System.out.println("test5");
+                finalAns = finalAns + sign;
+                finalAns = finalAns + combi;
+                finalAns = finalAns + expCont;
 
-            if(exp > 369 || exp < -398){
-                finalAns = "Invalid Exponent";
-                System.out.println(finalAns);
-            }
-            else{
-                finalAns = finalAns + getSignBit(dec_Inp);
-                finalAns = finalAns + getCombiField(dec_Inp, exp);
-                finalAns = finalAns + getExpCont(exp);
+                this.signLbl.setVisible(true);
+                this.signOut.setVisible(true);
+                this.combiLbl.setVisible(true);
+                this.combiOut.setVisible(true);
+                this.expCLbl.setVisible(true);
+                this.expCOut.setVisible(true);
+                this.coCLbl.setVisible(true);
+                this.coCOut.setVisible(true);
 
+
+                System.out.println("tobcdstring = " + toBCDString);
                 BCDList = toBCDString.split("(?<=\\G.{" + 3 + "})");
-
-                for (int i = 0; i < 5; i++){
+                for (int i = 0; i < 5; i++) {
                     String bcd = DecToBCD(BCDList[i]);
+                    System.out.println(BCDList[i]);
                     String dpbcd = BCDToDPBCD(bcd);
 
                     finalAns = finalAns + dpbcd;
                 }
 
                 String hexString = new BigInteger(finalAns, 2).toString(16);
+
+                if (hexString.length() != 16){
+                    while (hexString.length() != 16){
+                        hexString = "0" + hexString;
+                    }
+                }
+
+                hexString = hexString.toUpperCase();
+                hexString = hexString.substring(0, 4) + " " + hexString.substring(4, 8) + " " +
+                            hexString.substring(8, 12) + " " + hexString.substring(12);
+
+                combi = combi.substring(0, 2) + " " + combi.substring(2);
+                expCont = expCont.substring(0, 4) + " " + expCont.substring(4);
+                String coefCont = finalAns.substring(14, 24) + " " + finalAns.substring(24, 34) + " " +
+                                finalAns.substring(34, 44) + " " + finalAns.substring(44, 54) + " " +
+                                finalAns.substring(54);
+
                 System.out.println(finalAns);
                 System.out.println(hexString.toUpperCase());
-            }*/
+                this.signOut.setText(sign);
+                this.combiOut.setText(combi);
+                this.expCOut.setText(expCont);
+                this.coCOut.setText(coefCont);
+                this.hexOut.setText(hexString);
+                this.special = false;
+            }
         }
     }
 
@@ -937,6 +944,7 @@ public class DecTo64 implements ActionListener {
 
     static String RoundUp(String DecInput){
         if(Globals.padded == false){
+            DecInput = NormalizeDec(DecInput);
             if(DecInput.length() > 16 && DecInput.charAt(0) != '-'){
                 DecInput = DecInput.substring(0, 16);
                 BigInteger temp = new BigInteger(DecInput);
@@ -949,7 +957,6 @@ public class DecTo64 implements ActionListener {
             }
         }
         else{
-            Globals.padded = false; //remove if wrong placement
             return DecInput;
         }
 
@@ -959,10 +966,10 @@ public class DecTo64 implements ActionListener {
     static String RoundDown(String DecInput){
         if(Globals.padded == false){
             if(DecInput.length() > 16 && DecInput.charAt(0) != '-'){
-                DecInput= DecInput.substring(0, 16);
+                DecInput = DecInput.substring(0, 16);
             }
             else if(DecInput.length() > 17 && DecInput.charAt(0) == '-'){
-                DecInput= DecInput.substring(0, 17);
+                DecInput = DecInput.substring(0, 17);
                 BigInteger temp = new BigInteger(DecInput);
                 BigInteger one = new BigInteger("1");
                 BigInteger diff = temp.subtract(one);
@@ -970,7 +977,6 @@ public class DecTo64 implements ActionListener {
             }
         }
         else{
-            Globals.padded = false; //remove if wrong placement
             return DecInput;
         }
         return DecInput;
@@ -986,7 +992,6 @@ public class DecTo64 implements ActionListener {
             }
         }
         else{
-            Globals.padded = false; //remove if wrong placement
             return DecInput;
         }
 
@@ -1045,7 +1050,6 @@ public class DecTo64 implements ActionListener {
             }
         }
         else{
-            Globals.padded = false; //remove if wrong placement
             return DecInput;
         }
 
